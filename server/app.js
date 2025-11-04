@@ -1,27 +1,40 @@
-import dotenv from 'dotenv';
-import express from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
 
-dotenv.config(); 
+import { db } from "./config/db.js";
+
+// // Route imports
+// import authRoutes from "./routes/authRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 4000;
 
-// console.log('PORT from .env:', process.env.PORT);
-
-// Middlewares
-app.use(express.json());
+// 🔧 Middlewares
 app.use(cors());
+app.use(express.json());
 
+// // 🔗 API Routes
+// app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 
+// 🏠 Test route
+app.get("/", (req, res) => {
+  res.send("Welcome to BahiKhata API 🚀");
+});
 
-const server = () => {
-  app.listen(PORT, () => {
-    console.log('Listening to port', PORT);
-  }).on('error', (err) => {
-    console.error('Server error:', err.message);
-  });
-};
+// ❌ 404 handler
+app.use((req, res, next) => {
+  res.status(404).json({ message: "Route not found" });
+});
 
-server();
+// ⚙️ Start server only if DB connected
+const PORT = process.env.PORT || 5000;
+try {
+  await db.query("SELECT 1");
+  app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+} catch (error) {
+  console.error("❌ Cannot start server — DB connection failed:", error.message);
+}
