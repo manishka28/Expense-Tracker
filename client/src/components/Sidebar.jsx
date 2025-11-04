@@ -1,11 +1,11 @@
 import { useState, useContext } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { Home, Wallet, BarChart, Target, Settings, Menu, X, LogOut } from "lucide-react";
 import Logo from "../assets/images/BahiKhata.png";
 import { ThemeContext } from "../context/ThemeContext.jsx";
 
 const links = [
-  { to: "/", label: "Dashboard", icon: <Home size={18} /> },
+  { to: "/dashboard", label: "Dashboard", icon: <Home size={18} /> },
   { to: "/expenses", label: "Expenses", icon: <Wallet size={18} /> },
   { to: "/income", label: "Income", icon: <BarChart size={18} /> },
   { to: "/goals", label: "Goals", icon: <Target size={18} /> },
@@ -16,6 +16,14 @@ const links = [
 export default function Sidebar() {
   const { theme } = useContext(ThemeContext);
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Clear user data and redirect to login
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/");
+  };
 
   return (
     <>
@@ -71,6 +79,7 @@ export default function Sidebar() {
 
         {/* Logout */}
         <div
+          onClick={handleLogout}
           className={`p-4 border-t flex items-center justify-center gap-2 text-sm cursor-pointer transition-colors duration-300 ${
             theme === "dark"
               ? "border-green-500/20 text-gray-400 hover:text-green-300"

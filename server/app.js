@@ -7,6 +7,8 @@ import { db } from "./config/db.js";
 // // Route imports
 // import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import categoryRoutes from "./routes/categoryRoutes.js";
+import expenseRoutes from "./routes/expenseRoutes.js";
 
 dotenv.config();
 
@@ -19,6 +21,8 @@ app.use(express.json());
 // // 🔗 API Routes
 // app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/expenses", expenseRoutes);
 
 // 🏠 Test route
 app.get("/", (req, res) => {
