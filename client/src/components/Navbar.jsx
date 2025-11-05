@@ -49,7 +49,7 @@ export default function Navbar({ setShouldFetch }) {
     setOpen(false);
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    navigate("/login");
+    navigate("/");
   };
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");

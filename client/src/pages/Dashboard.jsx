@@ -1,131 +1,282 @@
-import { useContext } from "react";
-import { Plus, ArrowUp, ArrowDown } from "lucide-react";
+import React, { useEffect, useState, useContext } from "react";
+import axios from "axios";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts";
+import { motion } from "framer-motion";
+import {
+  FaArrowUp,
+  FaArrowDown,
+  FaWallet,
+  FaExclamationTriangle,
+} from "react-icons/fa";
 import { ThemeContext } from "../context/ThemeContext";
+import { useAuth } from "../context/AuthContext";
 
 export default function Dashboard() {
   const { theme } = useContext(ThemeContext);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const userId = user.userId;
 
-  const transactions = [
-    { id: 1, type: "Income", category: "Salary", amount: 5000, date: "2025-11-01" },
-    { id: 2, type: "Expense", category: "Groceries", amount: 1200, date: "2025-11-02" },
-    { id: 3, type: "Expense", category: "Transport", amount: 800, date: "2025-11-03" },
-    { id: 4, type: "Income", category: "Freelance", amount: 2500, date: "2025-11-03" },
-  ];
+  const COLORS = ["#10b981", "#34d399", "#6ee7b7", "#2dd4bf", "#a7f3d0"];
+  const isDark = theme === "dark";
 
-  const barHeights = [50, 120, 80, 150, 90, 200, 130];
-  const barColors = theme === "dark"
-    ? ["#d1d5db", "#9ca3af", "#f3f4f6", "#6b7280", "#e5e7eb", "#4b5563", "#f9fafb"]
-    : ["#34d399", "#10b981", "#6ee7b7", "#3b82f6", "#60a5fa", "#fbbf24", "#f87171"]; // light mode colors
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const res = await axios.get(`http://localhost:3000/api/dashboard/${userId}`);
+        setData(res.data);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboardData();
+  }, [userId]);
+
+  if (loading)
+    return (
+      <div className="text-center text-gray-400 mt-20">
+        Loading dashboard...
+      </div>
+    );
+
+  if (!data)
+    return (
+      <div className="text-center text-red-500 mt-20">
+        Failed to load dashboard data
+      </div>
+    );
+
+  const {
+    totalIncome = 0,
+    totalExpense = 0,
+    netSavings = 0,
+    upcomingBills = 0,
+    monthlyData = [],
+    pieData = [],
+    goals = [],
+    recentTransactions = [],
+  } = data;
+
+  const formatAmount = (amount) =>
+    isNaN(Number(amount))
+      ? "0.00"
+      : Number(amount).toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
 
   return (
-    <div className={`p-6 transition-colors duration-300 ${theme === "dark" ? "text-gray-100" : "text-gray-900"}`}>
-      <h1 className={`text-3xl md:text-4xl font-bold mb-8 ${theme === "dark" ? "text-white/90" : "text-gray-900"}`}>
-        Dashboard Overview
+    <div
+      className={`p-6 transition-colors duration-300 ${
+        isDark ? "text-white" : "text-gray-900"
+      }`}
+    >
+      <h1 className="text-3xl md:text-4xl font-bold mb-8">
+        {user?.name}'s Dashboard
       </h1>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className={`p-6 rounded-xl shadow-lg hover:shadow-2xl transition ${
-          theme === "dark" ? "bg-gradient-to-tr from-green-900 to-black border border-gray-700" : "bg-green-100 border border-gray-300"
-        }`}>
-          <h3 className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>Total Income</h3>
-          <p className={`text-2xl md:text-3xl font-bold mt-2 flex items-center gap-2 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-            ₹ 25,000 <ArrowUp size={20} className="text-green-500" />
-          </p>
-        </div>
+      {/* --- Stats Cards --- */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+        {/* Income */}
+        <DashboardCard
+          theme={theme}
+          title="Total Income"
+          value={`₹ ${formatAmount(totalIncome)}`}
+          gradientDark="from-green-900 to-black"
+          gradientLight="bg-green-100 border-green-300"
+          icon={<FaArrowUp className="text-green-500" />}
+        />
 
-        <div className={`p-6 rounded-xl shadow-lg hover:shadow-2xl transition ${
-          theme === "dark" ? "bg-gradient-to-tr from-red-900 to-black border border-gray-700" : "bg-red-100 border border-gray-300"
-        }`}>
-          <h3 className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>Total Expenses</h3>
-          <p className={`text-2xl md:text-3xl font-bold mt-2 flex items-center gap-2 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-            ₹ 18,700 <ArrowDown size={20} className="text-red-500" />
-          </p>
-        </div>
+        {/* Expense */}
+        <DashboardCard
+          theme={theme}
+          title="Total Expenses"
+          value={`₹ ${formatAmount(totalExpense)}`}
+          gradientDark="from-red-900 to-black"
+          gradientLight="bg-red-100 border-red-300"
+          icon={<FaArrowDown className="text-red-500" />}
+        />
 
-        <div className={`p-6 rounded-xl shadow-lg hover:shadow-2xl transition ${
-          theme === "dark" ? "bg-gradient-to-tr from-green-800 via-green-900 to-black border border-gray-700" : "bg-green-200 border border-gray-300"
-        }`}>
-          <h3 className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>Savings</h3>
-          <p className={`text-2xl md:text-3xl font-bold mt-2 flex items-center gap-2 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-            ₹ 6,300 <ArrowUp size={20} className="text-green-500" />
-          </p>
-        </div>
+        {/* Net Savings */}
+        <DashboardCard
+          theme={theme}
+          title="Net Savings"
+          value={`₹ ${formatAmount(netSavings)}`}
+          gradientDark="from-teal-900 to-black"
+          gradientLight="bg-teal-100 border-teal-300"
+          icon={<FaWallet className="text-teal-500" />}
+        />
+
+        {/* Upcoming Bills */}
+        <DashboardCard
+          theme={theme}
+          title="Upcoming Bills"
+          value={`${upcomingBills} Due Soon`}
+          gradientDark="from-yellow-800 to-black"
+          gradientLight="bg-yellow-100 border-yellow-300"
+          icon={<FaExclamationTriangle className="text-yellow-500" />}
+        />
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {/* Income vs Expenses */}
-        <div className={`p-6 rounded-xl shadow-lg hover:shadow-2xl transition ${
-          theme === "dark" ? "bg-gradient-to-br from-green-950 to-black border border-gray-700" : "bg-gray-100 border border-gray-300"
-        }`}>
-          <h3 className={`text-lg md:text-xl font-semibold mb-4 ${theme === "dark" ? "text-white/80" : "text-gray-900"}`}>Income vs Expenses</h3>
-          <div className={`h-64 flex items-end justify-around rounded-lg p-4 transition-colors duration-300 ${
-            theme === "dark" ? "bg-gray-900/40" : "bg-white/60"
-          }`}>
-            {barHeights.map((h, idx) => (
-              <div
-                key={idx}
-                className="rounded-t-md transition hover:brightness-125"
-                style={{
-                  height: `${h}px`,
-                  width: "15px",
-                  backgroundColor: barColors[idx],
+      {/* --- Charts --- */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+        {/* Line Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className={`p-6 rounded-xl shadow-lg transition ${
+            isDark
+              ? "bg-gradient-to-br from-green-950 to-black border border-gray-700"
+              : "bg-white border border-gray-200"
+          }`}
+        >
+          <h3 className="text-xl font-semibold mb-4">
+            Monthly Income vs Expenses
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={monthlyData}>
+              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#374151" : "#e5e7eb"} />
+              <XAxis dataKey="month" stroke={isDark ? "#9ca3af" : "#4b5563"} />
+              <YAxis stroke={isDark ? "#9ca3af" : "#4b5563"} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: isDark ? "#1f2937" : "#f9fafb",
+                  color: isDark ? "#fff" : "#000",
                 }}
               />
-            ))}
-          </div>
-        </div>
+              <Legend />
+              <Line type="monotone" dataKey="income" stroke="#10b981" strokeWidth={3} />
+              <Line type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={3} />
+            </LineChart>
+          </ResponsiveContainer>
+        </motion.div>
 
-        {/* Expenses by Category */}
-        <div className={`p-6 rounded-xl shadow-lg hover:shadow-2xl transition ${
-          theme === "dark" ? "bg-gradient-to-br from-green-950 to-black border border-gray-700" : "bg-gray-100 border border-gray-300"
-        }`}>
-          <h3 className={`text-lg md:text-xl font-semibold mb-4 ${theme === "dark" ? "text-white/80" : "text-gray-900"}`}>Expenses by Category</h3>
-          <div className={`h-64 flex items-center justify-center rounded-lg relative ${
-            theme === "dark" ? "bg-gray-900/40" : "bg-white/50"
-          }`}>
-            <div className="w-40 h-40 rounded-full bg-gray-700/40 relative overflow-hidden animate-spin-slow">
-              <div className="absolute inset-0 bg-white/30 clip-pie"></div>
-            </div>
-            <div className={`absolute font-semibold ${theme === "dark" ? "text-white/80" : "text-gray-900/80"}`}>Pie Chart</div>
-          </div>
-        </div>
+        {/* Pie Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className={`p-6 rounded-xl shadow-lg transition ${
+            isDark
+              ? "bg-gradient-to-br from-green-950 to-black border border-gray-700"
+              : "bg-white border border-gray-200"
+          }`}
+        >
+          <h3 className="text-xl font-semibold mb-4">Expense Breakdown</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={pieData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                fill="#82ca9d"
+                label
+              >
+                {pieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: isDark ? "#1f2937" : "#f9fafb",
+                  color: isDark ? "#fff" : "#000",
+                }}
+              />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </motion.div>
       </div>
 
-      {/* Recent Transactions */}
-      <div className={`p-6 rounded-xl shadow-lg hover:shadow-2xl transition ${
-        theme === "dark" ? "bg-gradient-to-tr from-green-950 to-black border border-gray-700" : "bg-gray-100 border border-gray-300"
-      }`}>
-        <div className="flex justify-between items-center mb-4">
-          <h3 className={`text-lg md:text-xl font-semibold ${theme === "dark" ? "text-white/80" : "text-gray-900"}`}>Recent Transactions</h3>
-          <button className="flex items-center gap-2 bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 transition">
-            <Plus size={16} /> Add
-          </button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className={`min-w-full divide-y ${theme === "dark" ? "divide-gray-700" : "divide-gray-300"}`}>
-            <thead className={`${theme === "dark" ? "bg-gray-900/30" : "bg-gray-200"}`}>
-              <tr>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-400">Date</th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-400">Type</th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-400">Category</th>
-                <th className="px-4 py-2 text-right text-sm font-medium text-gray-400">Amount</th>
-              </tr>
-            </thead>
-            <tbody className={`${theme === "dark" ? "divide-y divide-gray-700" : "divide-y divide-gray-300"}`}>
-              {transactions.map((t) => (
-                <tr key={t.id} className={`transition hover:${theme === "dark" ? "bg-gray-800/40" : "bg-gray-200/30"}`}>
-                  <td className="px-4 py-2">{t.date}</td>
-                  <td className={`px-4 py-2 font-medium ${t.type === "Income" ? "text-green-400" : "text-red-400"}`}>{t.type}</td>
-                  <td className="px-4 py-2">{t.category}</td>
-                  <td className="px-4 py-2 text-right">₹ {t.amount}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {/* --- Recent Transactions --- */}
+      <div
+        className={`p-6 rounded-xl shadow-lg transition ${
+          isDark
+            ? "bg-gradient-to-br from-green-950 to-black border border-gray-700"
+            : "bg-white border border-gray-200"
+        }`}
+      >
+        <h3 className="text-xl font-semibold mb-4">Recent Transactions</h3>
+        <ul>
+          {recentTransactions.length > 0 ? (
+            recentTransactions.map((txn) => (
+              <li
+                key={txn.id}
+                className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700 last:border-none"
+              >
+                <div>
+                  <p className="font-medium">
+                    {txn.category || "General"}{" "}
+                    <span
+                      className={`text-sm ml-2 px-2 py-1 rounded-full ${
+                        txn.type === "Income"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {txn.type}
+                    </span>
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {txn.note || "No note"} –{" "}
+                    {new Date(txn.date).toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </p>
+                </div>
+                <p
+                  className={`font-semibold ${
+                    txn.type === "Income" ? "text-green-500" : "text-red-500"
+                  }`}
+                >
+                  ₹{formatAmount(txn.amount)}
+                </p>
+              </li>
+            ))
+          ) : (
+            <p className="text-gray-500 text-sm italic">
+              No recent transactions found.
+            </p>
+          )}
+        </ul>
       </div>
     </div>
   );
 }
+
+/* --- Dashboard Card Component --- */
+const DashboardCard = ({ title, value, icon, gradientDark, gradientLight, theme }) => (
+  <div
+    className={`p-6 rounded-xl shadow-lg transition ${
+      theme === "dark"
+        ? `bg-gradient-to-tr ${gradientDark} border border-gray-700`
+        : `${gradientLight} border`
+    }`}
+  >
+    <h3 className="text-sm text-gray-700 dark:text-gray-400 flex items-center gap-2">
+      {icon} {title}
+    </h3>
+    <p className="text-2xl font-bold mt-2">{value}</p>
+  </div>
+);

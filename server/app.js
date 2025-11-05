@@ -9,7 +9,12 @@ import { db } from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
-
+import incomeRoutes from "./routes/incomeRoutes.js";
+import recurringExpenseRoutes from "./routes/recurringExpenseRoutes.js";
+import dashboardRoutes from "./routes/dashboardRoutes.js";
+import cron from "node-cron";
+import { processRecurringExpenses } from "./controllers/recurringExpenseController.js";
+import expenseAnalyticsRoutes from "./routes/expenseAnalyticsRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -23,6 +28,16 @@ app.use(express.json());
 app.use("/api/users", userRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/expenses", expenseRoutes);
+app.use("/api/income", incomeRoutes);
+app.use("/api/recurring-expenses", recurringExpenseRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api", expenseAnalyticsRoutes);
+
+
+cron.schedule("0 0 * * *", async () => {
+  console.log("⏰ Running daily recurring expense check...");
+  await processRecurringExpenses();
+});
 
 // 🏠 Test route
 app.get("/", (req, res) => {
