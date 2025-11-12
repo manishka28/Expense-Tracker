@@ -10,10 +10,11 @@ import Settings from "./pages/Settings";
 import { AuthProvider } from "./context/AuthContext";
 import Profile from "./pages/Profile";
 import { ThemeProvider } from "./context/ThemeContext";
-
+import { ToastContainer } from "react-toastify";
 function App() {
   return (
-    
+    <>
+    <ToastContainer position="top-right" autoClose={3000} />
     <Router>
       <Routes>
         {/* 🏠 Home (entry point before login) */}
@@ -78,7 +79,7 @@ function App() {
         />
       </Routes>
     </Router>
-    
+    </>
   );
 }
 

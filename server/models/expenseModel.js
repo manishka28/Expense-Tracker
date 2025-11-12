@@ -37,3 +37,8 @@ export const fetchExpenses = async (user_id) => {
   const [rows] = await db.query(query, [user_id]);
   return rows;
 };
+
+export const removeExpense = async (expenseId) => {
+  const query = `DELETE FROM expenses WHERE expense_id = '${expenseId}'`;
+  await db.query(query);
+};

@@ -15,6 +15,7 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 import cron from "node-cron";
 import { processRecurringExpenses } from "./controllers/recurringExpenseController.js";
 import expenseAnalyticsRoutes from "./routes/expenseAnalyticsRoutes.js";
+import goalRoutes from './routes/goalRoutes.js';
 dotenv.config();
 
 const app = express();
@@ -32,7 +33,7 @@ app.use("/api/income", incomeRoutes);
 app.use("/api/recurring-expenses", recurringExpenseRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api", expenseAnalyticsRoutes);
-
+app.use('/api/goals', goalRoutes);
 
 cron.schedule("0 0 * * *", async () => {
   console.log("⏰ Running daily recurring expense check...");

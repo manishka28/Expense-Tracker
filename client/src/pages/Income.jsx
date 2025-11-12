@@ -27,12 +27,12 @@ export default function Income() {
       const fetchedData = await res.json();
       const data=fetchedData.data;
 
-      console.log("Income data: ",data);
+      // console.log("Income data: ",data);
       
 
       if (!Array.isArray(data) || data.length === 0) {
         setIncome([]);
-        console.log("Income saved",income);
+        // console.log("Income saved",income);
         
         return;
       }
@@ -104,7 +104,7 @@ export default function Income() {
         theme === "dark" ? "text-white" : "text-gray-900"
       }`}
     >
-      <ToastContainer position="top-right" autoClose={3000} />
+      {/* <ToastContainer position="top-right" autoClose={3000} /> */}
 
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
@@ -186,7 +186,7 @@ export default function Income() {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div
           className={`p-6 rounded-xl shadow-lg ${
             theme === "dark"
@@ -215,7 +215,7 @@ export default function Income() {
             <Pie data={pieData} />
           )}
         </div>
-      </div>
+      </div> */}
 
       {/* Timeline */}
       <div className="mb-8">

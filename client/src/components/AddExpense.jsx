@@ -15,11 +15,12 @@ export default function AddExpense({ isOpen, onClose, setShouldFetch }) {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [date, setDate] = useState(new Date().toLocaleDateString('en-CA')); // default to today
 
   const { user } = useAuth();
   const userId = user?.userId;
 
-  // 🔹 Fetch categories on open
+  // Fetch categories on open
   useEffect(() => {
     if (!isOpen || !userId) return;
     axios
@@ -28,7 +29,7 @@ export default function AddExpense({ isOpen, onClose, setShouldFetch }) {
       .catch(() => toast.error("Failed to fetch categories"));
   }, [isOpen, userId]);
 
-  // 🔹 Update subcategories dynamically
+  // Update subcategories dynamically
   useEffect(() => {
     if (!selectedCategory) {
       setSubcategories([]);
@@ -39,7 +40,7 @@ export default function AddExpense({ isOpen, onClose, setShouldFetch }) {
     if (cat) setSubcategories(cat.subcategories || []);
   }, [selectedCategory, categories]);
 
-  // 🔹 Handle form submit
+  // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!userId) {
@@ -50,7 +51,7 @@ export default function AddExpense({ isOpen, onClose, setShouldFetch }) {
     try {
       await axios.post("http://localhost:3000/api/expenses", {
         user_id: userId,
-        date: new Date().toISOString().split("T")[0],
+        date, // use selected date
         amount,
         category_id: selectedCategory,
         subcategory_id: selectedSubcategory || null,
@@ -68,6 +69,7 @@ export default function AddExpense({ isOpen, onClose, setShouldFetch }) {
       setAmount("");
       setDescription("");
       setPaymentMethod("cash");
+      setDate(new Date().toISOString().split("T")[0]);
     } catch (err) {
       console.error(err);
       toast.error("Failed to add expense.");
@@ -76,7 +78,6 @@ export default function AddExpense({ isOpen, onClose, setShouldFetch }) {
 
   if (!isOpen) return null;
 
-  // 🎨 Theme-based styles
   const modalBg =
     theme === "dark"
       ? "bg-gradient-to-br from-gray-900 to-black text-gray-100"
@@ -107,6 +108,10 @@ export default function AddExpense({ isOpen, onClose, setShouldFetch }) {
         </h2>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          
+
+
+
           {/* Category */}
           <select
             value={selectedCategory}
@@ -137,6 +142,15 @@ export default function AddExpense({ isOpen, onClose, setShouldFetch }) {
               </option>
             ))}
           </select>
+<input
+  type="date"
+  value={date}
+  onChange={(e) => setDate(e.target.value)}
+  max={new Date().toLocaleDateString('en-CA')} // ensures today in local timezone
+  className={`p-2 rounded-lg border focus:outline-none ${inputBg}`}
+  required
+/>
+
 
           {/* Amount */}
           <input

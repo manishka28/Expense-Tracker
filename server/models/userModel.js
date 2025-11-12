@@ -6,7 +6,8 @@ export const createUser = async (name, email, phone, password_hash) => {
     "INSERT INTO users (name, email, phone, password_hash) VALUES (?, ?, ?, ?)",
     [name, email, phone, password_hash]
   );
-  return result.insertId;
+  const [rows] = await db.query("SELECT user_id FROM users WHERE email = ?", [email]);
+  return rows[0].user_id;
 };
 
 export const findUserByEmail = async (email) => {

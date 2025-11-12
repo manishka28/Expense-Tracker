@@ -17,6 +17,7 @@ import { toast, ToastContainer } from "react-toastify";
 import { Pie, Bar } from "react-chartjs-2";
 import "react-toastify/dist/ReactToastify.css";
 import "chart.js/auto";
+import { useFetch } from "../context/FetchContext";
 
 export default function Expenses() {
   const { theme } = useContext(ThemeContext);
@@ -37,7 +38,7 @@ export default function Expenses() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [monthlyModalOpen, setMonthlyModalOpen] = useState(false);
-  const [shouldFetch, setShouldFetch] = useState(false); // central trigger for refresh
+  const { shouldFetch, setShouldFetch } = useFetch();
   const [recurringExpenses, setRecurringExpenses] = useState([]);
   const [recurringModalOpen, setRecurringModalOpen] = useState(false);
 
@@ -49,35 +50,43 @@ export default function Expenses() {
     try {
       const res = await fetch(`http://localhost:3000/api/categories/${userId}`);
       const data = await res.json();
+      // console.log("res",res);
+      
       setCategories(data || []);
     } catch (err) {
       console.error("Error fetching categories:", err);
     }
   };
 
-  // 💰 Fetch expenses
-  const fetchExpenses = async () => {
-    if (!userId) return;
-    try {
-      const res = await fetch(`http://localhost:3000/api/expenses/${userId}`);
-      const data = await res.json();
+ const fetchExpenses = async () => {
+  if (!userId) return;
+  try {
+    const res = await fetch(`http://localhost:3000/api/expenses/${userId}`);
+    const data = await res.json();
+    console.log(data);
+    
+    // Sort by date first (latest first)
+    const sortedData = data.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-      const formattedData = data.map((exp) => ({
-        ...exp,
-        dateFormatted: new Date(exp.date).toLocaleDateString("en-GB", {
-          day: "numeric",
-          month: "short",
-          year: "2-digit",
-        }),
-      }));
+    // Then format for display
+    const formattedData = sortedData.map((exp) => ({
+      ...exp,
+      dateFormatted: new Date(exp.date).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "2-digit",
+      }),
+    }));
 
-      setExpenses(formattedData);
-      setFilteredExpenses(formattedData);
-    } catch (err) {
-      toast.error("Failed to fetch expenses");
-      console.error(err);
-    }
-  };
+    setExpenses(formattedData);
+    setFilteredExpenses(formattedData);
+  } catch (err) {
+    // toast.error("Failed to fetch expenses");
+    console.error(err);
+  }
+};
+
+
 
   // Initial fetch
   useEffect(() => {
@@ -173,9 +182,11 @@ const fetchRecurringExpenses = async () => {
     return null;
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (expenseId) => {
     try {
-      await fetch(`http://localhost:3000/api/expenses/${id}`, { method: "DELETE" });
+      console.log("id",expenseId);
+      
+      await fetch(`http://localhost:3000/api/expenses/${expenseId}`, { method: "DELETE" });
       toast.success("Expense deleted successfully!");
       setShouldFetch(true);
     } catch (err) {
@@ -227,7 +238,7 @@ const fetchRecurringExpenses = async () => {
         theme === "dark" ? "text-white" : "text-gray-900"
       }`}
     >
-      <ToastContainer position="top-right" autoClose={3000} />
+      {/* <ToastContainer position="top-right" autoClose={3000} /> */}
 
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
@@ -241,18 +252,19 @@ const fetchRecurringExpenses = async () => {
           >
             Monthly Report
           </button>
-          <button
-            onClick={() => setModalOpen(true)}
-            className="flex items-center gap-2 bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white px-4 py-2 rounded-xl shadow-lg transition transform hover:scale-105"
-          >
-            <Plus size={18} /> Add Expense
-          </button>
+          
           <button
   onClick={() => setRecurringModalOpen(true)}
   className="flex items-center gap-2 bg-gradient-to-r from-purple-400 to-purple-600 hover:from-purple-500 hover:to-purple-700 text-white px-4 py-2 rounded-xl shadow-lg transition transform hover:scale-105"
 >
   <Plus size={18} /> Add Recurring Expense
 </button>
+<button
+            onClick={() => setModalOpen(true)}
+            className="flex items-center gap-2 bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white px-4 py-2 rounded-xl shadow-lg transition transform hover:scale-105"
+          >
+            <Plus size={18} /> Add Expense
+          </button>
 
         </div>
       </div>
@@ -297,7 +309,7 @@ const fetchRecurringExpenses = async () => {
 
 
       {/* Charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div
           className={`p-6 rounded-xl shadow-lg transition ${
             theme === "dark"
@@ -319,7 +331,7 @@ const fetchRecurringExpenses = async () => {
           <h3 className="text-xl font-semibold mb-4">Expenses by Category</h3>
           <Pie data={pieData} />
         </div>
-      </div>
+      </div> */}
 
 {/* Timeline */}
 <div className="mb-10">
@@ -333,7 +345,7 @@ const fetchRecurringExpenses = async () => {
       <div className="relative max-h-[400px] overflow-y-auto border-l-2 border-green-500 dark:border-green-700 pl-6 space-y-4 pr-2 custom-scrollbar">
         {filteredExpenses.slice(0, visibleCount).map((exp) => (
           <div
-            key={exp.expense_id}
+            key={exp.category_name}
             className={`relative p-3 rounded-lg shadow-md text-sm ${
               theme === "dark"
                 ? "bg-gradient-to-tr from-gray-800 to-black"
@@ -349,7 +361,7 @@ const fetchRecurringExpenses = async () => {
 
             {/* Note and date */}
             <div className="flex justify-between items-center mb-1">
-              <span className="font-semibold">{exp.note || "No Note"}</span>
+              <span className="font-semibold">{exp.category_name || "No Note"}</span>
               <span className="text-xs text-gray-400">
                 {exp.dateFormatted}
               </span>
@@ -357,20 +369,32 @@ const fetchRecurringExpenses = async () => {
 
             {/* Category, payment method & amount */}
             <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <span
-                  className="px-2 py-0.5 rounded-full text-xs font-semibold text-white"
-                  style={{
-                    backgroundColor:
-                      exp.amount > 1000 ? "#f87171" : "#10b981",
-                  }}
-                >
-                  {exp.category}
-                </span>
-                {getPaymentIcon(exp.payment_method)}
-              </div>
-              <span className="font-bold">₹ {exp.amount}</span>
-            </div>
+  <div className="flex items-center gap-2">
+    <span
+      className="px-2 py-0.5 rounded-full text-xs font-semibold text-white"
+      style={{
+        backgroundColor: exp.amount > 1000 ? "#f87171" : "#10b981",
+      }}
+    >
+      {exp.subcategory_name}
+    </span>
+    {getPaymentIcon(exp.payment_method)}
+  </div>
+
+  <div className="flex items-center gap-2">
+    <span className="font-bold">₹ {exp.amount}</span>
+
+    {/* Delete Button */}
+    <button
+      onClick={() => handleDelete(exp.expense_id)}
+      className="text-red-500 hover:text-red-700 text-sm px-2 py-1 rounded-md border border-red-300 hover:border-red-500 transition"
+      title="Delete Expense"
+    >
+      Delete
+    </button>
+  </div>
+</div>
+
           </div>
         ))}
       </div>

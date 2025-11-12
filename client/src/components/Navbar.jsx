@@ -7,22 +7,23 @@ import {
   UserCircle,
   Moon,
   Sun,
-  PlusCircle,
   Search,
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { ThemeContext } from "../context/ThemeContext.jsx";
-import AddExpense from "./AddExpense.jsx";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import VoiceAssistant from "./VoiceAssistant.jsx";
+import { useFetch } from "../context/FetchContext.jsx";
 
-export default function Navbar({ setShouldFetch }) {
+export default function Navbar() {
   const { theme, setTheme } = useContext(ThemeContext);
   const [open, setOpen] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
   const iconRef = useRef();
   const dropdownRef = useRef();
   const navigate = useNavigate();
+  const { shouldFetch, setShouldFetch } = useFetch();
+
 
   // 🔹 Handle outside click
   useEffect(() => {
@@ -86,17 +87,31 @@ export default function Navbar({ setShouldFetch }) {
 
         {/* Right Section */}
         <div className="flex items-center gap-5 ml-6 relative">
-          {/* Add Button */}
-          <button
-            className={`px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm font-semibold transition-transform duration-200 ${
-              theme === "dark"
-                ? "bg-gradient-to-r from-green-400 to-emerald-500 text-black hover:scale-105"
-                : "bg-gradient-to-r from-green-400 to-green-600 text-white hover:scale-105"
-            }`}
-            onClick={() => setModalOpen(true)}
-          >
-            <PlusCircle size={16} /> Add
-          </button>
+{/* Voice Assistant with Talking Animation */}
+<div className="relative flex items-center justify-center group">
+  {/* Pulsing Circle around Mic */}
+  <div
+    className="absolute w-10 h-10 rounded-full border-2 border-green-500/40 scale-100 opacity-0 group-hover:opacity-100 group-hover:animate-ping"
+  ></div>
+
+  {/* Voice Assistant Component */}
+  <div className="relative z-10 flex items-center justify-center">
+    <VoiceAssistant setShouldFetch={setShouldFetch} />
+  </div>
+
+  {/* Mouth Animation beside Mic */}
+  <div
+    className={`absolute left-10 flex gap-0.5 items-center opacity-0 group-hover:opacity-100 transition-all duration-500 ${
+      theme === "dark" ? "text-green-300" : "text-green-700"
+    }`}
+  >
+    <div className="w-1 h-2 rounded-full bg-current animate-mouth"></div>
+    <div className="w-1 h-3 rounded-full bg-current animate-mouth delay-100"></div>
+    <div className="w-1 h-2 rounded-full bg-current animate-mouth delay-200"></div>
+  </div>
+</div>
+
+
 
           {/* Notification Icon */}
           <Bell
@@ -152,9 +167,7 @@ export default function Navbar({ setShouldFetch }) {
               >
                 <button
                   className={`w-full text-left px-4 py-2 flex items-center gap-2 transition-colors duration-200 ${
-                    theme === "dark"
-                      ? "hover:bg-white/10"
-                      : "hover:bg-gray-100"
+                    theme === "dark" ? "hover:bg-white/10" : "hover:bg-gray-100"
                   }`}
                   onClick={handleProfile}
                 >
@@ -162,9 +175,7 @@ export default function Navbar({ setShouldFetch }) {
                 </button>
                 <button
                   className={`w-full text-left px-4 py-2 flex items-center gap-2 transition-colors duration-200 ${
-                    theme === "dark"
-                      ? "hover:bg-white/10"
-                      : "hover:bg-gray-100"
+                    theme === "dark" ? "hover:bg-white/10" : "hover:bg-gray-100"
                   }`}
                   onClick={handleLogout}
                 >
@@ -173,18 +184,11 @@ export default function Navbar({ setShouldFetch }) {
               </div>,
               document.body
             )}
-
-          {/* Add Expense Modal */}
-          <AddExpense
-            isOpen={modalOpen}
-            onClose={() => setModalOpen(false)}
-            setShouldFetch={setShouldFetch}
-          />
         </div>
       </header>
 
       {/* Toasts */}
-      <ToastContainer position="top-right" autoClose={3000} />
+      {/* <ToastContainer position="top-right" autoClose={3000} /> */}
     </>
   );
 }

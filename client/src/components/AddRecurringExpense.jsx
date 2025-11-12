@@ -135,15 +135,17 @@ export default function AddRecurringExpense({ isOpen, onClose, setShouldFetch })
               ))}
           </select>
 
-          {/* Start Date */}
-          <label className="text-sm font-medium mt-2">Start Date</label>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className={`p-2 rounded-lg border focus:outline-none ${inputBg}`}
-            required
-          />
+{/* Start Date */}
+<label className="text-sm font-medium mt-2">Start Date</label>
+<input
+  type="date"
+  value={startDate}
+  onChange={(e) => setStartDate(e.target.value)}
+  max={new Date().toISOString().split("T")[0]} // Prevent future dates
+  className={`p-2 rounded-lg border focus:outline-none ${inputBg}`}
+  required
+/>
+
 
           {/* Frequency */}
           <label className="text-sm font-medium mt-2">Frequency</label>

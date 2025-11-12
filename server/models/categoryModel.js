@@ -3,9 +3,11 @@ import { db } from "../config/db.js";
 export const getCategoriesByUser = async (userId) => {
   // Fetch categories where user_id = given userId OR user_id IS NULL
   const [categories] = await db.query(
-    "SELECT category_id, name FROM categories WHERE user_id = ? OR user_id IS NULL",
+    "SELECT category_id, name FROM categories",
     [userId]
   );
+  // console.log(categories);
+  
 
   const categoriesWithSubs = await Promise.all(
     categories.map(async (cat) => {
@@ -19,3 +21,4 @@ export const getCategoriesByUser = async (userId) => {
 
   return categoriesWithSubs;
 };
+
